@@ -22,6 +22,13 @@ class AuthController extends Controller
             'status' => 'active',
         ]);
 
+        try {
+            \Illuminate\Support\Facades\Mail::to($user->email)->send(new \App\Mail\WelcomeEmail($user));
+        } catch (\Exception $e) {
+            // Log the error but don't fail the registration
+            \Illuminate\Support\Facades\Log::error('Failed to send welcome email: ' . $e->getMessage());
+        }
+
         $token = $user->createCustomToken();
 
         return response()->json([
