@@ -3,13 +3,13 @@
 use App\Http\Controllers\ChannelController;
 use Illuminate\Support\Facades\Route;
 
-// Protected channel routes
+// Protected channel routes (flat structure)
 Route::middleware(['custom.auth'])->group(function () {
-    Route::get('/workspaces/{workspace}/teams/{team}/channels', [ChannelController::class, 'index'])->middleware(['workspace.access', 'team.access']);
-    Route::post('/workspaces/{workspace}/teams/{team}/channels', [ChannelController::class, 'store'])->middleware(['workspace.access', 'team.access']);
-    Route::get('/workspaces/{workspace}/teams/{team}/channels/{channel}', [ChannelController::class, 'show'])->middleware(['workspace.access', 'team.access', 'channel.access']);
-    Route::put('/workspaces/{workspace}/teams/{team}/channels/{channel}', [ChannelController::class, 'update'])->middleware(['workspace.access', 'team.access', 'channel.access']);
-    Route::delete('/workspaces/{workspace}/teams/{team}/channels/{channel}', [ChannelController::class, 'destroy'])->middleware(['workspace.access', 'team.access', 'channel.access']);
-    Route::post('/workspaces/{workspace}/teams/{team}/channels/{channel}/members', [ChannelController::class, 'addMember'])->middleware(['workspace.access', 'team.access', 'channel.access']);
-    Route::delete('/workspaces/{workspace}/teams/{team}/channels/{channel}/members', [ChannelController::class, 'removeMember'])->middleware(['workspace.access', 'team.access', 'channel.access']);
+    Route::get('/channels', [ChannelController::class, 'index']);
+    Route::post('/channels', [ChannelController::class, 'store']);
+    Route::get('/channels/{channel}', [ChannelController::class, 'show'])->middleware('channel.access');
+    Route::put('/channels/{channel}', [ChannelController::class, 'update'])->middleware('channel.access');
+    Route::delete('/channels/{channel}', [ChannelController::class, 'destroy'])->middleware('channel.access');
+    Route::post('/channels/{channel}/members', [ChannelController::class, 'addMember'])->middleware('channel.access');
+    Route::delete('/channels/{channel}/members', [ChannelController::class, 'removeMember'])->middleware('channel.access');
 });
