@@ -10,7 +10,7 @@ use MongoDB\Laravel\Eloquent\Model;
 
 class User extends Model implements AuthenticatableContract, AuthorizableContract
 {
-    use Authenticatable, Authorizable;
+    use Authenticatable, Authorizable, \Illuminate\Auth\Passwords\CanResetPassword;
 
     protected $connection = 'mongodb';
     protected $collection = 'users';
@@ -118,12 +118,6 @@ class User extends Model implements AuthenticatableContract, AuthorizableContrac
      */
     private function generateRandomToken($length = 64)
     {
-        $characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
-        $charactersLength = strlen($characters);
-        $randomString = '';
-        for ($i = 0; $i < $length; $i++) {
-            $randomString .= $characters[mt_rand(0, $charactersLength - 1)];
-        }
-        return $randomString;
+        return \Illuminate\Support\Str::random($length);
     }
 }

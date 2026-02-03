@@ -1,2 +1,0 @@
-- [ ] Update routes/channel.php to add {id} parameter to addMember and removeMember routes
-- [ ] Test the API endpoints to ensure they work correctly

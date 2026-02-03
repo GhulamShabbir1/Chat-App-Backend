@@ -167,7 +167,7 @@ See [TEST_COMMANDS.md](TEST_COMMANDS.md) for detailed testing procedures
 | [QUICK_START.md](QUICK_START.md) | 5-minute setup guide |
 | [SETUP_GUIDE.md](SETUP_GUIDE.md) | Detailed installation |
 | [API_ENDPOINTS_REFERENCE.md](API_ENDPOINTS_REFERENCE.md) | All API endpoints |
-| [API_README.md](API_README.md) | API overview |
+| [API_ENDPOINTS_REFERENCE.md](API_ENDPOINTS_REFERENCE.md) | All API endpoints |
 | [GRIDFS_GUIDE.md](GRIDFS_GUIDE.md) | File storage guide |
 | [GRIDFS_QUICK_REFERENCE.md](GRIDFS_QUICK_REFERENCE.md) | File API reference |
 | [POSTMAN_API_DOCUMENTATION.md](POSTMAN_API_DOCUMENTATION.md) | Postman guide |
@@ -226,6 +226,115 @@ db.createCollection('file_attachments')
 - List: `GET /api/files`
 
 See [GRIDFS_QUICK_REFERENCE.md](GRIDFS_QUICK_REFERENCE.md) for examples
+
+---
+
+## 🗄️ Database Schema
+
+### Collections
+
+#### users
+```javascript
+{
+    _id: ObjectId,
+    name: String,
+    email: String (unique),
+    password: String (hashed),
+    profile_picture: String,
+    status: String (active|away|busy|offline),
+    last_seen_at: DateTime,
+    created_at: DateTime,
+    updated_at: DateTime
+}
+```
+
+#### workspaces
+```javascript
+{
+    _id: ObjectId,
+    name: String,
+    description: String,
+    owner_id: ObjectId (ref: users),
+    member_ids: [ObjectId],
+    settings: Object,
+    created_at: DateTime,
+    updated_at: DateTime
+}
+```
+
+#### teams
+```javascript
+{
+    _id: ObjectId,
+    name: String,
+    description: String,
+    workspace_id: ObjectId (ref: workspaces),
+    member_ids: [ObjectId],
+    settings: Object,
+    created_at: DateTime,
+    updated_at: DateTime
+}
+```
+
+#### channels
+```javascript
+{
+    _id: ObjectId,
+    name: String,
+    description: String,
+    team_id: ObjectId (ref: teams),
+    type: String (public|private),
+    member_ids: [ObjectId],
+    settings: Object,
+    created_at: DateTime,
+    updated_at: DateTime
+}
+```
+
+#### messages
+```javascript
+{
+    _id: ObjectId,
+    content: String,
+    sender_id: ObjectId (ref: users),
+    channel_id: ObjectId (ref: channels),
+    receiver_id: ObjectId (ref: users),
+    type: String (channel|direct),
+    attachment_id: ObjectId (ref: file_attachments),
+    edited_at: DateTime,
+    deleted_at: DateTime,
+    created_at: DateTime,
+    updated_at: DateTime
+}
+```
+
+#### file_attachments
+```javascript
+{
+    _id: ObjectId,
+    filename: String,
+    original_filename: String,
+    mime_type: String,
+    size: Integer,
+    gridfs_id: String,
+    uploader_id: ObjectId (ref: users),
+    created_at: DateTime,
+    updated_at: DateTime
+}
+```
+
+---
+
+## 🔒 Middleware
+
+### Authentication Middleware
+All protected routes require `auth:sanctum` middleware.
+
+### Custom Middleware
+
+1. **CheckWorkspaceAccess** - Verifies user has access to workspace
+2. **CheckTeamAccess** - Verifies user is a team member
+3. **CheckChannelAccess** - Verifies user can access channel (especially private channels)
 
 ---
 

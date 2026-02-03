@@ -21,6 +21,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'validate.team.store' => \App\Http\Middleware\ValidateTeamStore::class,
             'validate.channel.store' => \App\Http\Middleware\ValidateChannelStore::class,
             'validate.file.upload' => \App\Http\Middleware\ValidateFileUpload::class,
+            'validate.forgot.password' => \App\Http\Middleware\ValidateForgotPassword::class,
+            'validate.reset.password' => \App\Http\Middleware\ValidateResetPassword::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

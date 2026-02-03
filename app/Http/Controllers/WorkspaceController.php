@@ -16,19 +16,8 @@ class WorkspaceController extends Controller
 {
     public function index(Request $request)
     {
-        $user = $request->user();
-        $cacheKey = 'user_workspaces_' . $user->_id;
-
-        $workspaces = Cache::remember($cacheKey, 3600, function () use ($user) {
-            return Workspace::where('owner_id', $user->_id)
-                ->orWhereIn('_id', function ($query) use ($user) {
-                    $query->select('_id')
-                        ->from('workspaces')
-                        ->where('member_ids', $user->_id);
-                })
-                ->orderBy('created_at', 'desc')
-                ->get();
-        });
+        $workspaces = Workspace::orderBy('created_at', 'desc')
+            ->get();
 
         return response()->json([
             'workspaces' => WorkspaceResource::collection($workspaces),
