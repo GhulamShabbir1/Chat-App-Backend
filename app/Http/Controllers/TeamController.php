@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\Team\StoreTeamRequest;
+use App\Http\Resources\TeamResource;
 use App\Mail\TeamInvitation;
 use App\Models\Team;
 use App\Models\User;
@@ -12,9 +14,13 @@ use Illuminate\Support\Facades\Validator;
 
 class TeamController extends Controller
 {
-    public function index(Request $request, $workspaceId)
+    public function index(Request $request)
     {
-        // Ensure workspaceId is compared correctly
+        $workspaceId = $request->query('workspace_id');
+        if (!$workspaceId) {
+            return response()->json(['error' => 'workspace_id is required'], 400);
+        }
+
         $teams = Team::where('workspace_id', (string) $workspaceId)
             ->orderBy('created_at', 'desc')
             ->get();
@@ -26,19 +32,10 @@ class TeamController extends Controller
         ]);
     }
 
-    public function store(Request $request, $workspaceId)
+    public function store(StoreTeamRequest $request)
     {
-        $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
-
         // Ensure workspace exists
-        $workspace = Workspace::where('_id', $workspaceId)->first();
+        $workspace = Workspace::where('_id', $request->workspace_id)->first();
         if (!$workspace) {
             return response()->json(['error' => 'Workspace not found'], 404);
         }
@@ -47,7 +44,7 @@ class TeamController extends Controller
             $teamData = [
                 'name' => $request->name,
                 'description' => $request->description,
-                'workspace_id' => (string) $workspaceId,
+                'workspace_id' => (string) $request->workspace_id,
                 'owner_id' => (string) $request->user()->_id,
                 'member_ids' => [(string) $request->user()->_id],
                 'settings' => [],
@@ -57,10 +54,10 @@ class TeamController extends Controller
 
             // Refresh the team to ensure _id is properly populated
             $team = $team->fresh();
-            
+
             // Fallback 1: if fresh() returns null, query directly
             if (!$team || !$team->_id) {
-                $team = Team::where('workspace_id', (string) $workspaceId)
+                $team = Team::where('workspace_id', (string) $request->workspace_id)
                     ->where('owner_id', (string) $request->user()->_id)
                     ->where('name', $request->name)
                     ->orderBy('created_at', 'desc')
@@ -69,7 +66,7 @@ class TeamController extends Controller
 
             // Fallback 2: if still null, query by just workspace and name
             if (!$team) {
-                $team = Team::where('workspace_id', (string) $workspaceId)
+                $team = Team::where('workspace_id', (string) $request->workspace_id)
                     ->where('name', $request->name)
                     ->orderBy('created_at', 'desc')
                     ->first();
@@ -77,7 +74,7 @@ class TeamController extends Controller
 
             // Fallback 3: if still null, get the most recent team
             if (!$team) {
-                $team = Team::where('workspace_id', (string) $workspaceId)
+                $team = Team::where('workspace_id', (string) $request->workspace_id)
                     ->orderBy('created_at', 'desc')
                     ->first();
             }
@@ -86,7 +83,7 @@ class TeamController extends Controller
                 return response()->json([
                     'error' => 'Team was created but could not be retrieved',
                     'debug' => [
-                        'workspace_id' => (string) $workspaceId,
+                        'workspace_id' => (string) $request->workspace_id,
                         'name' => $request->name,
                         'owner_id' => (string) $request->user()->_id,
                     ]
@@ -95,7 +92,7 @@ class TeamController extends Controller
 
             return response()->json([
                 'message' => 'Team created successfully',
-                'team' => $team,
+                'team' => new TeamResource($team),
                 'team_id' => (string) $team->_id,
             ], 201);
         } catch (\Exception $e) {
@@ -103,15 +100,20 @@ class TeamController extends Controller
                 'error' => 'Failed to create team',
                 'message' => $e->getMessage(),
                 'debug' => [
-                    'workspace_id' => (string) $workspaceId,
+                    'workspace_id' => (string) $request->workspace_id,
                     'name' => $request->name,
                 ]
             ], 500);
         }
     }
 
-    public function show($workspaceId, $id)
+    public function show(Request $request, $id)
     {
+        $workspaceId = $request->query('workspace_id');
+        if (!$workspaceId) {
+            return response()->json(['error' => 'workspace_id is required'], 400);
+        }
+
         $team = Team::where('_id', $id)
             ->where('workspace_id', $workspaceId)
             ->first();
@@ -125,8 +127,13 @@ class TeamController extends Controller
         ]);
     }
 
-    public function update(Request $request, $workspaceId, $id)
+    public function update(Request $request, $id)
     {
+        $workspaceId = $request->query('workspace_id');
+        if (!$workspaceId) {
+            return response()->json(['error' => 'workspace_id is required'], 400);
+        }
+
         $team = Team::where('_id', $id)
             ->where('workspace_id', $workspaceId)
             ->first();
@@ -165,8 +172,13 @@ class TeamController extends Controller
         ]);
     }
 
-    public function destroy(Request $request, $workspaceId, $id)
+    public function destroy(Request $request, $id)
     {
+        $workspaceId = $request->query('workspace_id');
+        if (!$workspaceId) {
+            return response()->json(['error' => 'workspace_id is required'], 400);
+        }
+
         $team = Team::where('_id', $id)
             ->where('workspace_id', $workspaceId)
             ->first();
@@ -187,8 +199,13 @@ class TeamController extends Controller
         ]);
     }
 
-    public function addMember(Request $request, $workspaceId, $id)
+    public function addMember(Request $request, $id)
     {
+        $workspaceId = $request->query('workspace_id');
+        if (!$workspaceId) {
+            return response()->json(['error' => 'workspace_id is required'], 400);
+        }
+
         $team = Team::where('_id', $id)
             ->where('workspace_id', $workspaceId)
             ->first();
@@ -218,14 +235,19 @@ class TeamController extends Controller
         $user = User::find($request->user_id);
         Mail::to($user->email)->send(new TeamInvitation($team, $user));
 
-  return response()->json([
+        return response()->json([
             'message' => 'Member added successfully',
             'team' => $team,
         ]);
     }
 
-    public function removeMember(Request $request, $workspaceId, $id)
+    public function removeMember(Request $request, $id)
     {
+        $workspaceId = $request->query('workspace_id');
+        if (!$workspaceId) {
+            return response()->json(['error' => 'workspace_id is required'], 400);
+        }
+
         $team = Team::where('_id', $id)
             ->where('workspace_id', $workspaceId)
             ->first();

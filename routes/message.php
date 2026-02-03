@@ -3,11 +3,11 @@
 use App\Http\Controllers\MessageController;
 use Illuminate\Support\Facades\Route;
 
-// Protected message routes
+// Protected message routes (flattened)
 Route::middleware(['custom.auth'])->group(function () {
-    // Channel messages
-    Route::get('/workspaces/{workspace}/teams/{team}/channels/{channel}/messages', [MessageController::class, 'indexChannelMessages'])->middleware(['workspace.access', 'team.access', 'channel.access']);
-    Route::post('/workspaces/{workspace}/teams/{team}/channels/{channel}/messages', [MessageController::class, 'storeChannelMessage'])->middleware(['workspace.access', 'team.access', 'channel.access']);
+    // Channel messages (flattened)
+    Route::get('/channel-messages', [MessageController::class, 'indexChannelMessages']);
+    Route::post('/channel-messages', [MessageController::class, 'storeChannelMessage']);
 
     // Direct messages
     Route::get('/messages/direct', [MessageController::class, 'indexDirectMessages']);

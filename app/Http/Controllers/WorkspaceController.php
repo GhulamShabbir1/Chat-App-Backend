@@ -1,7 +1,9 @@
 <?php
 
 namespace App\Http\Controllers;
-
+use App\Http\Requests\Workspace\AddWorkspaceMemberRequest;
+use App\Http\Requests\Workspace\RemoveWorkspaceMemberRequest;
+use App\Http\Resources\WorkspaceResource;
 use App\Mail\WorkspaceInvitation;
 use App\Models\User;
 use App\Models\Workspace;
@@ -29,7 +31,7 @@ class WorkspaceController extends Controller
         });
 
         return response()->json([
-            'workspaces' => $workspaces,
+            'workspaces' => WorkspaceResource::collection($workspaces),
             'count' => count($workspaces),
         ]);
     }
@@ -86,7 +88,7 @@ class WorkspaceController extends Controller
 
             return response()->json([
                 'message' => 'Workspace created successfully',
-                'workspace' => $workspace,
+                'workspace' => new WorkspaceResource($workspace),
                 'workspace_id' => (string) $workspace->_id,
             ], 201);
         } catch (\Exception $e) {
@@ -106,7 +108,7 @@ class WorkspaceController extends Controller
         }
 
         return response()->json([
-            'workspace' => $workspace,
+            'workspace' => new WorkspaceResource($workspace),
         ]);
     }
 
@@ -170,9 +172,9 @@ class WorkspaceController extends Controller
         ]);
     }
 
-    public function addMember(Request $request, $id)
+    public function addMember(AddWorkspaceMemberRequest $request)
     {
-        $workspace = Workspace::find($id);
+        $workspace = Workspace::find($request->workspace_id);
 
         if (!$workspace) {
             return response()->json(['error' => 'Workspace not found'], 404);
@@ -180,14 +182,6 @@ class WorkspaceController extends Controller
 
         if ($workspace->owner_id != $request->user()->_id) {
             return response()->json(['error' => 'Only workspace owner can add members'], 403);
-        }
-
-        $validator = Validator::make($request->all(), [
-            'user_id' => 'required|exists:users,_id',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
         }
 
         $memberIds = $workspace->member_ids ?? [];
@@ -208,13 +202,13 @@ class WorkspaceController extends Controller
 
         return response()->json([
             'message' => 'Member added successfully',
-            'workspace' => $workspace,
+            'workspace' => new WorkspaceResource($workspace),
         ]);
     }
 
-    public function removeMember(Request $request, $id)
+    public function removeMember(RemoveWorkspaceMemberRequest $request)
     {
-        $workspace = Workspace::find($id);
+        $workspace = Workspace::find($request->workspace_id);
 
         if (!$workspace) {
             return response()->json(['error' => 'Workspace not found'], 404);
@@ -222,14 +216,6 @@ class WorkspaceController extends Controller
 
         if ($workspace->owner_id != $request->user()->_id) {
             return response()->json(['error' => 'Only workspace owner can remove members'], 403);
-        }
-
-        $validator = Validator::make($request->all(), [
-            'user_id' => 'required',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
         }
 
         $memberIds = $workspace->member_ids ?? [];
@@ -242,7 +228,7 @@ class WorkspaceController extends Controller
 
         return response()->json([
             'message' => 'Member removed successfully',
-            'workspace' => $workspace,
+            'workspace' => new WorkspaceResource($workspace),
         ]);
     }
 }

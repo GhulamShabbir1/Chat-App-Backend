@@ -17,6 +17,10 @@ return Application::configure(basePath: dirname(__DIR__))
             'team.access' => \App\Http\Middleware\CheckTeamAccess::class,
             'channel.access' => \App\Http\Middleware\CheckChannelAccess::class,
             'custom.auth' => \App\Http\Middleware\CustomAuthMiddleware::class,
+            'validate.workspace.store' => \App\Http\Middleware\ValidateWorkspaceStore::class,
+            'validate.team.store' => \App\Http\Middleware\ValidateTeamStore::class,
+            'validate.channel.store' => \App\Http\Middleware\ValidateChannelStore::class,
+            'validate.file.upload' => \App\Http\Middleware\ValidateFileUpload::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

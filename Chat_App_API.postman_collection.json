@@ -85,12 +85,91 @@
             },
             "url": "{{base_url}}/workspaces"
           }
+        },
+        {
+          "name": "Get Single Workspace",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{base_url}}/workspaces/{{workspace_id}}"
+          }
+        },
+        {
+          "name": "Update Workspace",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Workspace Name\",\n  \"description\": \"Updated description\"\n}"
+            },
+            "url": "{{base_url}}/workspaces/{{workspace_id}}"
+          }
+        },
+        {
+          "name": "Delete Workspace",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{base_url}}/workspaces/{{workspace_id}}"
+          }
+        },
+        {
+          "name": "Add Member to Workspace",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user_id\": \"{{user_id}}\"\n}"
+            },
+            "url": "{{base_url}}/workspace-members"
+          }
+        },
+        {
+          "name": "Remove Member from Workspace",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user_id\": \"{{user_id}}\"\n}"
+            },
+            "url": "{{base_url}}/workspace-members"
+          }
         }
       ]
     },
     {
       "name": "Teams",
       "item": [
+        {
+          "name": "List Teams",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{base_url}}/teams?workspace_id={{workspace_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["teams"],
+              "query": [
+                {
+                  "key": "workspace_id",
+                  "value": "{{workspace_id}}"
+                }
+              ]
+            }
+          }
+        },
         {
           "name": "Create Team",
           "request": {
@@ -101,9 +180,120 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Backend Team\",\n  \"description\": \"Backend developers\"\n}"
+              "raw": "{\n  \"name\": \"Backend Team\",\n  \"description\": \"Backend developers\",\n  \"workspace_id\": \"{{workspace_id}}\"\n}"
             },
-            "url": "{{base_url}}/workspaces/{{workspace_id}}/teams"
+            "url": "{{base_url}}/teams"
+          }
+        },
+        {
+          "name": "Get Single Team",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{base_url}}/teams/{{team_id}}?workspace_id={{workspace_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["teams", "{{team_id}}"],
+              "query": [
+                {
+                  "key": "workspace_id",
+                  "value": "{{workspace_id}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Team",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Team Name\",\n  \"description\": \"Updated description\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/teams/{{team_id}}?workspace_id={{workspace_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["teams", "{{team_id}}"],
+              "query": [
+                {
+                  "key": "workspace_id",
+                  "value": "{{workspace_id}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete Team",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{base_url}}/teams/{{team_id}}?workspace_id={{workspace_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["teams", "{{team_id}}"],
+              "query": [
+                {
+                  "key": "workspace_id",
+                  "value": "{{workspace_id}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Add Member to Team",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user_id\": \"{{user_id}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/teams/{{team_id}}/members?workspace_id={{workspace_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["teams", "{{team_id}}", "members"],
+              "query": [
+                {
+                  "key": "workspace_id",
+                  "value": "{{workspace_id}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Remove Member from Team",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user_id\": \"{{user_id}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/teams/{{team_id}}/members?workspace_id={{workspace_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["teams", "{{team_id}}", "members"],
+              "query": [
+                {
+                  "key": "workspace_id",
+                  "value": "{{workspace_id}}"
+                }
+              ]
+            }
           }
         }
       ]
@@ -111,6 +301,24 @@
     {
       "name": "Channels",
       "item": [
+        {
+          "name": "List Channels",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{base_url}}/channels?team_id={{team_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["channels"],
+              "query": [
+                {
+                  "key": "team_id",
+                  "value": "{{team_id}}"
+                }
+              ]
+            }
+          }
+        },
         {
           "name": "Create Channel",
           "request": {
@@ -121,9 +329,124 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"general\",\n  \"description\": \"General discussion\",\n  \"type\": \"public\"\n}"
+              "raw": "{\n  \"name\": \"general\",\n  \"description\": \"General discussion\",\n  \"type\": \"public\",\n  \"team_id\": \"{{team_id}}\"\n}"
             },
-            "url": "{{base_url}}/workspaces/{{workspace_id}}/teams/{{team_id}}/channels"
+            "url": "{{base_url}}/channels"
+          }
+        },
+        {
+          "name": "Get Single Channel",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{base_url}}/channels/{{channel_id}}?team_id={{team_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["channels", "{{channel_id}}"],
+              "query": [
+                {
+                  "key": "team_id",
+                  "value": "{{team_id}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Channel",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"updated-channel\",\n  \"description\": \"Updated description\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/channels/{{channel_id}}?team_id={{team_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["channels", "{{channel_id}}"],
+              "query": [
+                {
+                  "key": "team_id",
+                  "value": "{{team_id}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete Channel",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{base_url}}/channels/{{channel_id}}?team_id={{team_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["channels", "{{channel_id}}"],
+              "query": [
+                {
+                  "key": "team_id",
+                  "value": "{{team_id}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Add Member to Private Channel",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user_id\": \"{{user_id}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/channel-members/{{channel_id}}?team_id={{team_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["channel-members", "{{channel_id}}"],
+              "query": [
+                {
+                  "key": "team_id",
+                  "value": "{{team_id}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Remove Member from Private Channel",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user_id\": \"{{user_id}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/channel-members?team_id={{team_id}}&channel_id={{channel_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["channel-members"],
+              "query": [
+                {
+                  "key": "team_id",
+                  "value": "{{team_id}}"
+                },
+                {
+                  "key": "channel_id",
+                  "value": "{{channel_id}}"
+                }
+              ]
+            }
           }
         }
       ]
@@ -131,6 +454,24 @@
     {
       "name": "Messages",
       "item": [
+        {
+          "name": "List Channel Messages",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{base_url}}/channel-messages?channel_id={{channel_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["channel-messages"],
+              "query": [
+                {
+                  "key": "channel_id",
+                  "value": "{{channel_id}}"
+                }
+              ]
+            }
+          }
+        },
         {
           "name": "Send Channel Message",
           "request": {
@@ -141,9 +482,65 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"content\": \"Hello everyone!\"\n}"
+              "raw": "{\n  \"channel_id\": \"{{channel_id}}\",\n  \"team_id\": \"{{team_id}}\",\n  \"content\": \"Hello everyone!\",\n  \"attachment_id\": null\n}"
             },
-            "url": "{{base_url}}/channels/{{channel_id}}/messages"
+            "url": "{{base_url}}/channel-messages"
+          }
+        },
+        {
+          "name": "List Direct Messages",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{base_url}}/messages/direct?user_id={{user_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["messages", "direct"],
+              "query": [
+                {
+                  "key": "user_id",
+                  "value": "{{user_id}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Send Direct Message",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"receiver_id\": \"{{user_id}}\",\n  \"content\": \"Hey there!\",\n  \"attachment_id\": null\n}"
+            },
+            "url": "{{base_url}}/messages/direct"
+          }
+        },
+        {
+          "name": "Update Message",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"content\": \"Updated message content\"\n}"
+            },
+            "url": "{{base_url}}/messages/{{message_id}}"
+          }
+        },
+        {
+          "name": "Delete Message",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": "{{base_url}}/messages/{{message_id}}"
           }
         }
       ]

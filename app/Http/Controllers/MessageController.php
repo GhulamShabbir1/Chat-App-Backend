@@ -10,8 +10,13 @@ use Illuminate\Support\Facades\Validator;
 
 class MessageController extends Controller
 {
-    public function indexChannelMessages(Request $request, $workspaceId, $teamId, $channelId)
+    public function indexChannelMessages(Request $request)
     {
+        $channelId = $request->query('channel_id');
+        if (!$channelId) {
+            return response()->json(['error' => 'channel_id is required'], 400);
+        }
+
         $page = $request->input('page', 1);
         $perPage = $request->input('per_page', 50);
         $cacheKey = "channel_messages_{$channelId}_page_{$page}_per_{$perPage}";
@@ -75,18 +80,31 @@ class MessageController extends Controller
         ]);
     }
 
-    public function storeChannelMessage(Request $request, $workspaceId, $teamId, $channelId)
+    public function storeChannelMessage(Request $request)
     {
+        $channelId = $request->channel_id;
+        $teamId = $request->team_id;
+
+        if (!$channelId) {
+            return response()->json(['error' => 'channel_id is required'], 400);
+        }
+
+        if (!$teamId) {
+            return response()->json(['error' => 'team_id is required'], 400);
+        }
+
         // Verify channel exists
         $channel = Channel::where('_id', $channelId)
             ->where('team_id', $teamId)
             ->first();
-        
+
         if (!$channel) {
             return response()->json(['error' => 'Channel not found'], 404);
         }
 
         $validator = Validator::make($request->all(), [
+            'channel_id' => 'required|string',
+            'team_id' => 'required|string',
             'content' => 'required|string',
             'attachment_id' => 'nullable|exists:file_attachments,_id',
         ]);
@@ -184,7 +202,7 @@ class MessageController extends Controller
 
         return response()->json([
             'message' => 'Direct message sent successfully',
-            'data' => $message,
+            'data' => new MessageResource($message),
             'message_id' => (string) $message->_id,
         ], 201);
     }

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\ChannelResource;
 use App\Models\Channel;
 use App\Models\Team;
 use Illuminate\Http\Request;
@@ -9,8 +10,13 @@ use Illuminate\Support\Facades\Validator;
 
 class ChannelController extends Controller
 {
-    public function index($workspaceId, $teamId)
+    public function index(Request $request)
     {
+        $teamId = $request->query('team_id');
+        if (!$teamId) {
+            return response()->json(['error' => 'team_id is required'], 400);
+        }
+
         $channels = Channel::where('team_id', (string) $teamId)
             ->orderBy('created_at', 'desc')
             ->get();
@@ -22,21 +28,25 @@ class ChannelController extends Controller
         ]);
     }
 
-    public function store(Request $request, $workspaceId, $teamId)
+    public function store(Request $request)
     {
+        $teamId = $request->team_id;
+        if (!$teamId) {
+            return response()->json(['error' => 'team_id is required'], 400);
+        }
+
         // Verify team exists
-        $team = Team::where('_id', $teamId)
-            ->where('workspace_id', $workspaceId)
-            ->first();
-        
+        $team = Team::where('_id', $teamId)->first();
+
         if (!$team) {
-            return response()->json(['error' => 'Team not found'], 404);
+            return response()->json(['error' => 'Team not found', 'team_id' => $request->team_id], 404);
         }
 
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'type' => 'required|in:public,private',
+            'team_id' => 'required|string',
         ]);
 
         if ($validator->fails()) {
@@ -48,7 +58,7 @@ class ChannelController extends Controller
         $channel = Channel::create([
             'name' => $request->name,
             'description' => $request->description,
-            'team_id' => (string) $teamId,
+            'team_id' => (string) $request->team_id,
             'type' => $request->type,
             'owner_id' => (string) $request->user()->_id,
             'member_ids' => $memberIds,
@@ -57,10 +67,10 @@ class ChannelController extends Controller
 
         // Refresh the channel to ensure _id is properly populated
         $channel = $channel->fresh();
-        
+
         // Fallback: if fresh() returns null, query directly
         if (!$channel || !$channel->_id) {
-            $channel = Channel::where('team_id', (string) $teamId)
+            $channel = Channel::where('team_id', (string) $request->team_id)
                 ->where('name', $request->name)
                 ->orderBy('created_at', 'desc')
                 ->first();
@@ -68,13 +78,18 @@ class ChannelController extends Controller
 
         return response()->json([
             'message' => 'Channel created successfully',
-            'channel' => $channel,
+            'channel' => new ChannelResource($channel),
             'channel_id' => (string) $channel->_id,
         ], 201);
     }
 
-    public function show($workspaceId, $teamId, $id)
+    public function show(Request $request, $id)
     {
+        $teamId = $request->query('team_id');
+        if (!$teamId) {
+            return response()->json(['error' => 'team_id is required'], 400);
+        }
+
         $channel = Channel::where('_id', $id)
             ->where('team_id', $teamId)
             ->first();
@@ -88,8 +103,13 @@ class ChannelController extends Controller
         ]);
     }
 
-    public function update(Request $request, $workspaceId, $teamId, $id)
+    public function update(Request $request, $id)
     {
+        $teamId = $request->query('team_id');
+        if (!$teamId) {
+            return response()->json(['error' => 'team_id is required'], 400);
+        }
+
         $channel = Channel::where('_id', $id)
             ->where('team_id', $teamId)
             ->first();
@@ -129,12 +149,17 @@ class ChannelController extends Controller
 
         return response()->json([
             'message' => 'Channel updated successfully',
-            'channel' => $channel,
+            'channel' => new ChannelResource($channel),
         ]);
     }
 
-    public function destroy($workspaceId, $teamId, $id)
+    public function destroy(Request $request, $id)
     {
+        $teamId = $request->query('team_id');
+        if (!$teamId) {
+            return response()->json(['error' => 'team_id is required'], 400);
+        }
+
         $channel = Channel::where('_id', $id)
             ->where('team_id', $teamId)
             ->first();
@@ -155,8 +180,13 @@ class ChannelController extends Controller
         ]);
     }
 
-    public function addMember(Request $request, $workspaceId, $teamId, $id)
+    public function addMember(Request $request, $id)
     {
+        $teamId = $request->query('team_id');
+        if (!$teamId) {
+            return response()->json(['error' => 'team_id is required'], 400);
+        }
+
         $channel = Channel::where('_id', $id)
             ->where('team_id', $teamId)
             ->first();
@@ -185,7 +215,7 @@ class ChannelController extends Controller
 
         $memberIds[] = $request->user_id;
         $channel->member_ids = $memberIds;
- $channel->save();
+        $channel->save();
 
         return response()->json([
             'message' => 'Member added successfully',
@@ -193,8 +223,13 @@ class ChannelController extends Controller
         ]);
     }
 
-    public function removeMember(Request $request, $workspaceId, $teamId, $id)
+    public function removeMember(Request $request, $id)
     {
+        $teamId = $request->query('team_id');
+        if (!$teamId) {
+            return response()->json(['error' => 'team_id is required'], 400);
+        }
+
         $channel = Channel::where('_id', $id)
             ->where('team_id', $teamId)
             ->first();
@@ -222,7 +257,7 @@ class ChannelController extends Controller
 
         return response()->json([
             'message' => 'Member removed successfully',
-            'channel' => $channel,
+            'channel' => new ChannelResource($channel),
         ]);
     }
 }
