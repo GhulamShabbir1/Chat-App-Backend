@@ -6,12 +6,11 @@ use Illuminate\Auth\Authenticatable;
 use Illuminate\Contracts\Auth\Authenticatable as AuthenticatableContract;
 use Illuminate\Contracts\Auth\Access\Authorizable as AuthorizableContract;
 use Illuminate\Foundation\Auth\Access\Authorizable;
-use Laravel\Sanctum\HasApiTokens;
 use MongoDB\Laravel\Eloquent\Model;
 
 class User extends Model implements AuthenticatableContract, AuthorizableContract
 {
-    use Authenticatable, Authorizable, HasApiTokens;
+    use Authenticatable, Authorizable;
 
     protected $connection = 'mongodb';
     protected $collection = 'users';
@@ -83,28 +82,25 @@ class User extends Model implements AuthenticatableContract, AuthorizableContrac
     }
 
     /**
-     * Get the user's personal access tokens.
+     * Get the user's custom access tokens.
      */
-    public function tokens()
+    public function customTokens()
     {
-        return $this->morphMany(MongoPersonalAccessToken::class, 'tokenable');
+        return $this->hasMany(CustomAccessToken::class, 'user_id');
     }
 
     /**
-     * Create a new personal access token for the user.
+     * Create a new custom access token for the user.
      */
-    public function createToken($name, $abilities = ['*'], $expiresAt = null)
+    public function createCustomToken($expiresAt = null)
     {
-        $plainTextToken = \Illuminate\Support\Str::random(40);
-        $hashedToken = hash('sha256', $plainTextToken);
+        // Generate a random token using mt_rand
+        $token = $this->generateRandomToken(64); // 64 characters long
 
         // Create token data
         $tokenData = [
-            'name' => $name,
-            'token' => $hashedToken,
-            'abilities' => $abilities,
-            'tokenable_id' => (string) ($this->_id ?? $this->id),
-            'tokenable_type' => self::class,
+            'token' => $token,
+            'user_id' => (string) ($this->_id ?? $this->id),
         ];
 
         if ($expiresAt) {
@@ -112,18 +108,22 @@ class User extends Model implements AuthenticatableContract, AuthorizableContrac
         }
 
         // Create the token in MongoDB
-        $token = MongoPersonalAccessToken::create($tokenData);
+        $customToken = CustomAccessToken::create($tokenData);
 
-        // MongoDB doesn't immediately populate _id in attributes after create
-        // Query to get the token with _id populated
-        $token = MongoPersonalAccessToken::where('token', $hashedToken)->first();
-        $tokenId = (string) $token->_id;
+        return $token;
+    }
 
-        // Return the token with the plain text version INCLUDING the ID
-        // Format: {token_id}|{plain_text_token}
-        return (object) [
-            'accessToken' => $token,
-            'plainTextToken' => $tokenId . '|' . $plainTextToken,
-        ];
+    /**
+     * Generate a random token using mt_rand.
+     */
+    private function generateRandomToken($length = 64)
+    {
+        $characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        $charactersLength = strlen($characters);
+        $randomString = '';
+        for ($i = 0; $i < $length; $i++) {
+            $randomString .= $characters[mt_rand(0, $charactersLength - 1)];
+        }
+        return $randomString;
     }
 }

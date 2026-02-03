@@ -16,7 +16,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'workspace.access' => \App\Http\Middleware\CheckWorkspaceAccess::class,
             'team.access' => \App\Http\Middleware\CheckTeamAccess::class,
             'channel.access' => \App\Http\Middleware\CheckChannelAccess::class,
-            'mongo.auth' => \App\Http\Middleware\MongoSanctumAuth::class,
+            'custom.auth' => \App\Http\Middleware\CustomAuthMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

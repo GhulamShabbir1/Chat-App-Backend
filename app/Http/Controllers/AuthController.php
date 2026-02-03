@@ -28,7 +28,7 @@ class AuthController extends Controller
             'status' => 'active',
         ]);
 
-        $token = $user->createToken('auth_token')->plainTextToken;
+        $token = $user->createCustomToken();
 
         return response()->json([
             'message' => 'User registered successfully',
@@ -56,7 +56,7 @@ class AuthController extends Controller
             return response()->json(['error' => 'Invalid credentials'], 401);
         }
 
-        $token = $user->createToken('auth_token')->plainTextToken;
+        $token = $user->createCustomToken();
 
         return response()->json([
             'message' => 'Login successful',
@@ -68,7 +68,10 @@ class AuthController extends Controller
 
     public function logout(Request $request)
     {
-        $request->user()->currentAccessToken()->delete();
+        $token = $request->bearerToken();
+        if ($token) {
+            \App\Models\CustomAccessToken::where('token', $token)->delete();
+        }
 
         return response()->json(['message' => 'Logged out successfully']);
     }
