@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Middleware;
+namespace App\Http\Middleware\Workspace;
 
 use App\Models\Workspace;
 use Closure;

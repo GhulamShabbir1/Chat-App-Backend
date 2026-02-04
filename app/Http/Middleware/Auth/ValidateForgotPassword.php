@@ -1,13 +1,13 @@
 <?php
 
-namespace App\Http\Middleware;
+namespace App\Http\Middleware\Auth;
 
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Symfony\Component\HttpFoundation\Response;
 
-class ValidateDirectMessagesIndex
+class ValidateForgotPassword
 {
     /**
      * Handle an incoming request.
@@ -17,7 +17,7 @@ class ValidateDirectMessagesIndex
     public function handle(Request $request, Closure $next): Response
     {
         $validator = Validator::make($request->all(), [
-            'user_id' => 'required|exists:users,_id',
+            'email' => 'required|email|exists:users,email',
         ]);
 
         if ($validator->fails()) {

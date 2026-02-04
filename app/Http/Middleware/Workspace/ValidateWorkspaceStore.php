@@ -1,13 +1,13 @@
 <?php
 
-namespace App\Http\Middleware;
+namespace App\Http\Middleware\Workspace;
 
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Symfony\Component\HttpFoundation\Response;
 
-class ValidateFileUpload
+class ValidateWorkspaceStore
 {
     /**
      * Handle an incoming request.
@@ -17,19 +17,12 @@ class ValidateFileUpload
     public function handle(Request $request, Closure $next): Response
     {
         $validator = Validator::make($request->all(), [
-            'file' => 'required|file|max:10240',
+            'name' => 'required|string|max:255',
+            'description' => 'nullable|string',
         ]);
 
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
-        }
-
-        $file = $request->file('file');
-        $size = $file->getSize();
-
-        // Validate file size (max 10MB)
-        if ($size > 10485760) {
-            return response()->json(['error' => 'File size exceeds 10MB limit'], 422);
         }
 
         return $next($request);
