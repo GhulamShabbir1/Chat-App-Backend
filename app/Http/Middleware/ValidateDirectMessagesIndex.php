@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Symfony\Component\HttpFoundation\Response;
 
-class ValidateFileUpload
+class ValidateDirectMessagesIndex
 {
     /**
      * Handle an incoming request.
@@ -17,19 +17,11 @@ class ValidateFileUpload
     public function handle(Request $request, Closure $next): Response
     {
         $validator = Validator::make($request->all(), [
-            'file' => 'required|file|max:10240',
+            'user_id' => 'required|exists:users,_id',
         ]);
 
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
-        }
-
-        $file = $request->file('file');
-        $size = $file->getSize();
-
-        // Validate file size (max 10MB)
-        if ($size > 10485760) {
-            return response()->json(['error' => 'File size exceeds 10MB limit'], 422);
         }
 
         return $next($request);

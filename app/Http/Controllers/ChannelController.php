@@ -2,78 +2,41 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\Channel\AddChannelMemberRequest;
+use App\Http\Requests\Channel\GetChannelsRequest;
+use App\Http\Requests\Channel\RemoveChannelMemberRequest;
+use App\Http\Requests\Channel\StoreChannelRequest;
+use App\Http\Requests\Channel\UpdateChannelRequest;
 use App\Http\Resources\ChannelResource;
 use App\Models\Channel;
 use App\Models\Team;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
+// use Illuminate\Support\Facades\Validator;
 
 class ChannelController extends Controller
 {
-    public function index(Request $request)
+    public function index(GetChannelsRequest $request)
     {
-        $teamId = $request->query('team_id');
-        if (!$teamId) {
-            return response()->json(['error' => 'team_id is required'], 400);
-        }
-
-        $channels = Channel::where('team_id', (string) $teamId)
+        $channels = Channel::where('team_id', (string) $request->team_id)
             ->orderBy('created_at', 'desc')
             ->get();
 
         return response()->json([
-            'channels' => $channels,
-            'count' => count($channels),
-            'team_id' => (string) $teamId,
+            'channels' => ChannelResource::collection($channels),
+            'count' => $channels->count(),
+            'team_id' => $request->team_id,
         ]);
     }
 
-    public function store(Request $request)
+    public function store(StoreChannelRequest $request)
     {
-        $teamId = $request->team_id;
-        if (!$teamId) {
-            return response()->json(['error' => 'team_id is required'], 400);
-        }
+        // Verify team exists - handled by Request 'exists' rule.
+        // We can trust it.
 
-        // Verify team exists
-        $team = Team::where('_id', $teamId)->first();
+        $channel = Channel::createForUser($request->validated(), $request->user());
 
-        if (!$team) {
-            return response()->json(['error' => 'Team not found', 'team_id' => $request->team_id], 404);
-        }
-
-        $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'type' => 'required|in:public,private',
-            'team_id' => 'required|string',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
-
-        $memberIds = $request->type === 'private' ? [(string) $request->user()->_id] : [];
-
-        $channel = Channel::create([
-            'name' => $request->name,
-            'description' => $request->description,
-            'team_id' => (string) $request->team_id,
-            'type' => $request->type,
-            'owner_id' => (string) $request->user()->_id,
-            'member_ids' => $memberIds,
-            'settings' => [],
-        ]);
-
-        // Refresh the channel to ensure _id is properly populated
-        $channel = $channel->fresh();
-
-        // Fallback: if fresh() returns null, query directly
-        if (!$channel || !$channel->_id) {
-            $channel = Channel::where('team_id', (string) $request->team_id)
-                ->where('name', $request->name)
-                ->orderBy('created_at', 'desc')
-                ->first();
+        if (!$channel) {
+             return response()->json(['error' => 'Failed to create channel'], 500);
         }
 
         return response()->json([
@@ -99,53 +62,27 @@ class ChannelController extends Controller
         }
 
         return response()->json([
-            'channel' => $channel,
+            'channel' => new ChannelResource($channel),
         ]);
     }
 
-    public function update(Request $request, $id)
+    public function update(UpdateChannelRequest $request, $id)
     {
-        $teamId = $request->query('team_id');
-        if (!$teamId) {
-            return response()->json(['error' => 'team_id is required'], 400);
-        }
-
+        // UpdateChannelRequest validates team_id present.
+        
         $channel = Channel::where('_id', $id)
-            ->where('team_id', $teamId)
+            ->where('team_id', $request->team_id)
             ->first();
 
         if (!$channel) {
             return response()->json(['error' => 'Channel not found'], 404);
         }
 
-        // Only owner can update
         if ($channel->owner_id != $request->user()->_id) {
             return response()->json(['error' => 'Only channel owner can update'], 403);
         }
 
-        $validator = Validator::make($request->all(), [
-            'name' => 'sometimes|string|max:255',
-            'description' => 'sometimes|string',
-            'type' => 'sometimes|in:public,private',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
-
-        if ($request->has('name')) {
-            $channel->name = $request->name;
-        }
-
-        if ($request->has('description')) {
-            $channel->description = $request->description;
-        }
-
-        if ($request->has('type')) {
-            $channel->type = $request->type;
-        }
-
-        $channel->save();
+        $channel->update($request->validated());
 
         return response()->json([
             'message' => 'Channel updated successfully',
@@ -168,7 +105,6 @@ class ChannelController extends Controller
             return response()->json(['error' => 'Channel not found'], 404);
         }
 
-        // Only owner can delete
         if ($channel->owner_id != $request->user()->_id) {
             return response()->json(['error' => 'Only channel owner can delete'], 403);
         }
@@ -180,15 +116,10 @@ class ChannelController extends Controller
         ]);
     }
 
-    public function addMember(Request $request, $id)
+    public function addMember(AddChannelMemberRequest $request, $id)
     {
-        $teamId = $request->query('team_id');
-        if (!$teamId) {
-            return response()->json(['error' => 'team_id is required'], 400);
-        }
-
         $channel = Channel::where('_id', $id)
-            ->where('team_id', $teamId)
+            ->where('team_id', $request->team_id)
             ->first();
 
         if (!$channel) {
@@ -199,39 +130,21 @@ class ChannelController extends Controller
             return response()->json(['error' => 'Only private channels require member management'], 400);
         }
 
-        $validator = Validator::make($request->all(), [
-            'user_id' => 'required|exists:users,_id',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
-
-        $memberIds = $channel->member_ids ?? [];
-
-        if (in_array($request->user_id, $memberIds)) {
+        if (!$channel->addMember($request->user_id)) {
             return response()->json(['error' => 'User is already a member'], 400);
         }
 
-        $memberIds[] = $request->user_id;
-        $channel->member_ids = $memberIds;
-        $channel->save();
-
         return response()->json([
             'message' => 'Member added successfully',
-            'channel' => $channel,
+            'channel' => new ChannelResource($channel), // Return resource? Original returned model object attached to message?
+            // "channel" => $channel. Let's start transforming to Resource everywhere.
         ]);
     }
 
-    public function removeMember(Request $request, $id)
+    public function removeMember(RemoveChannelMemberRequest $request, $id)
     {
-        $teamId = $request->query('team_id');
-        if (!$teamId) {
-            return response()->json(['error' => 'team_id is required'], 400);
-        }
-
         $channel = Channel::where('_id', $id)
-            ->where('team_id', $teamId)
+            ->where('team_id', $request->team_id)
             ->first();
 
         if (!$channel) {
@@ -242,18 +155,7 @@ class ChannelController extends Controller
             return response()->json(['error' => 'Only private channels require member management'], 400);
         }
 
-        $validator = Validator::make($request->all(), [
-            'user_id' => 'required',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
-
-        $memberIds = $channel->member_ids ?? [];
-        $memberIds = array_filter($memberIds, fn($id) => $id != $request->user_id);
-        $channel->member_ids = array_values($memberIds);
-        $channel->save();
+        $channel->removeMember($request->user_id);
 
         return response()->json([
             'message' => 'Member removed successfully',

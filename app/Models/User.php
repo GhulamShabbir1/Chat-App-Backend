@@ -120,4 +120,30 @@ class User extends Model implements AuthenticatableContract, AuthorizableContrac
     {
         return \Illuminate\Support\Str::random($length);
     }
+
+    /**
+     * Verify user credentials.
+     */
+    public static function verifyCredentials(string $email, string $password): ?self
+    {
+        $user = self::where('email', $email)->first();
+
+        if (!$user || !\Illuminate\Support\Facades\Hash::check($password, $user->password)) {
+            return null;
+        }
+
+        return $user;
+    }
+
+    /**
+     * Update user profile.
+     */
+    public function updateProfile(array $attributes): void
+    {
+        if (isset($attributes['password'])) {
+            $attributes['password'] = \Illuminate\Support\Facades\Hash::make($attributes['password']);
+        }
+
+        $this->update($attributes);
+    }
 }

@@ -4,11 +4,8 @@ namespace App\Http\Requests\Channel;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class StoreChannelRequest extends FormRequest
+class GetChannelsRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
     public function authorize(): bool
     {
         return true;
@@ -17,9 +14,6 @@ class StoreChannelRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'type' => 'required|in:public,private',
             'team_id' => 'required|string|exists:teams,_id',
         ];
     }

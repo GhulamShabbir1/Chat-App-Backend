@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Route;
 // Protected workspace routes (flat structure)
 Route::middleware(['custom.auth'])->group(function () {
     Route::get('/workspaces', [WorkspaceController::class, 'index']);
-    Route::post('/workspaces', [WorkspaceController::class, 'store'])->middleware('validate.workspace.store');
+    Route::post('/workspaces', [WorkspaceController::class, 'store']);
     Route::get('/workspaces/{workspace}', [WorkspaceController::class, 'show']);
     Route::put('/workspaces/{workspace}', [WorkspaceController::class, 'update']);
     Route::delete('/workspaces/{workspace}', [WorkspaceController::class, 'destroy']);

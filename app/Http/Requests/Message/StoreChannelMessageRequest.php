@@ -11,18 +11,16 @@ class StoreChannelMessageRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
-     */
     public function rules(): array
     {
         return [
-            //
+            'channel_id' => 'required|string|exists:channels,_id',
+            'team_id' => 'required|string|exists:teams,_id',
+            'content' => 'required|string',
+            'attachment_id' => 'nullable|string|exists:file_attachments,_id',
         ];
     }
 }

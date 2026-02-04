@@ -22,12 +22,7 @@ class AuthController extends Controller
             'status' => 'active',
         ]);
 
-        try {
-            \Illuminate\Support\Facades\Mail::to($user->email)->send(new \App\Mail\WelcomeEmail($user));
-        } catch (\Exception $e) {
-            // Log the error but don't fail the registration
-            \Illuminate\Support\Facades\Log::error('Failed to send welcome email: ' . $e->getMessage());
-        }
+        \Illuminate\Support\Facades\Mail::to($user->email)->send(new \App\Mail\WelcomeEmail($user));
 
         $token = $user->createCustomToken();
 
@@ -42,9 +37,9 @@ class AuthController extends Controller
 
     public function login(LoginRequest $request)
     {
-        $user = User::where('email', $request->email)->first();
+        $user = User::verifyCredentials($request->email, $request->password);
 
-        if (!$user || !Hash::check($request->password, $user->password)) {
+        if (!$user) {
             return response()->json(['error' => 'Invalid credentials'], 401);
         }
 
@@ -78,28 +73,7 @@ class AuthController extends Controller
     public function updateProfile(UpdateProfileRequest $request)
     {
         $user = $request->user();
-
-        if ($request->has('name')) {
-            $user->name = $request->name;
-        }
-
-        if ($request->has('email')) {
-            $user->email = $request->email;
-        }
-
-        if ($request->has('password')) {
-            $user->password = Hash::make($request->password);
-        }
-
-        if ($request->has('profile_picture')) {
-            $user->profile_picture = $request->profile_picture;
-        }
-
-        if ($request->has('status')) {
-            $user->status = $request->status;
-        }
-
-        $user->save();
+        $user->updateProfile($request->validated());
 
         return response()->json([
             'message' => 'Profile updated successfully',

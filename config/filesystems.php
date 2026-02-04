@@ -60,6 +60,12 @@ return [
             'report' => false,
         ],
 
+        'gridfs' => [
+            'driver' => 'gridfs',
+            'database' => env('MONGODB_DATABASE', 'laravel'),
+            'bucket' => 'fs',
+        ],
+
     ],
 
     /*

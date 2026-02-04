@@ -70,4 +70,63 @@ class Message extends Model
     {
         return $this->type === 'channel';
     }
+
+    /**
+     * Scope to filter messages.
+     */
+    public function scopeFilter($query, array $filters)
+    {
+        // Implementation for generic filters if needed
+        return $query;
+    }
+
+    /**
+     * Scope for channel messages.
+     */
+    public function scopeForChannel($query, string $channelId)
+    {
+        return $query->where('channel_id', $channelId)
+                     ->where('type', 'channel')
+                     ->whereNull('deleted_at');
+    }
+
+    /**
+     * Scope for direct messages between two users.
+     */
+    public function scopeForDirect($query, string $userId1, string $userId2)
+    {
+        return $query->where('type', 'direct')
+                     ->where(function ($q) use ($userId1, $userId2) {
+                         $q->where(function ($sub) use ($userId1, $userId2) {
+                             $sub->where('sender_id', $userId1)
+                                 ->where('receiver_id', $userId2);
+                         })->orWhere(function ($sub) use ($userId1, $userId2) {
+                             $sub->where('sender_id', $userId2)
+                                 ->where('receiver_id', $userId1);
+                         });
+                     })
+                     ->whereNull('deleted_at');
+    }
+
+    /**
+     * Create a channel message.
+     */
+    public static function createChannelMessage(array $attributes, User $fromUser): self
+    {
+        $attributes['sender_id'] = (string) $fromUser->_id;
+        $attributes['type'] = 'channel';
+        
+        return self::create($attributes);
+    }
+
+    /**
+     * Create a direct message.
+     */
+    public static function createDirectMessage(array $attributes, User $fromUser): self
+    {
+        $attributes['sender_id'] = (string) $fromUser->_id;
+        $attributes['type'] = 'direct';
+
+        return self::create($attributes);
+    }
 }

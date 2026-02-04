@@ -11,7 +11,7 @@ class UploadFileRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -22,7 +22,20 @@ class UploadFileRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'file' => 'required|file|max:10240',
         ];
+    }
+
+    /**
+     * Configure the validator instance.
+     */
+    public function withValidator($validator)
+    {
+        $validator->after(function ($validator) {
+            $file = $this->file('file');
+            if ($file && $file->getSize() > 10485760) { // 10MB
+                $validator->errors()->add('file', 'File size exceeds 10MB limit');
+            }
+        });
     }
 }
