@@ -1,12 +1,16 @@
-# Middleware Grouping Task
-
-## Steps to Complete
-- [ ] Create subfolders in app/Http/Middleware/: Auth, Workspace, Team, Channel, File, Message
-- [ ] Move Auth middleware files and update namespaces
-- [ ] Move Workspace middleware files and update namespaces
-- [ ] Move Team middleware files and update namespaces
-- [ ] Move Channel middleware files and update namespaces
-- [ ] Move File middleware files and update namespaces
-- [ ] Move Message middleware files and update namespaces
-- [ ] Update aliases in bootstrap/app.php to reflect new namespaces
-- [ ] Remove old middleware files from app/Http/Middleware/
+- [x] Create `app/Models/OtpToken.php` model for storing OTP tokens
+- [x] Create `app/Mail/OtpMail.php` for sending OTP emails
+- [x] Create `app/Http/Requests/Auth/SendOtpRequest.php` validation class
+- [x] Create `app/Http/Requests/Auth/VerifyOtpRequest.php` validation class
+- [x] Modify `app/Http/Controllers/AuthController.php`: rename `register` to `sendOtp`, add `verifyOtp` method
+- [x] Update `routes/auth.php` to replace `/register` with `/send-otp` and add `/verify-otp`
+- [ ] Test the OTP send and verify flow
+=======
+## Tasks
+- [x] Create `app/Models/OtpToken.php` model for storing OTP tokens
+- [x] Create `app/Mail/OtpMail.php` for sending OTP emails
+- [x] Create `app/Http/Requests/Auth/SendOtpRequest.php` validation class
+- [x] Create `app/Http/Requests/Auth/VerifyOtpRequest.php` validation class
+- [x] Modify `app/Http/Controllers/AuthController.php`: rename `register` to `sendOtp`, add `verifyOtp` method
+- [x] Update `routes/auth.php` to replace `/register` with `/send-otp` and add `/verify-otp`
+- [x] Test the OTP send and verify flow

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use MongoDB\Laravel\Eloquent\Model;
+use League\Flysystem\Config;
 
 class FileAttachment extends Model
 {
@@ -63,11 +64,7 @@ class FileAttachment extends Model
              throw new \Exception('Failed to read file content');
         }
 
-        $stored = \Illuminate\Support\Facades\Storage::disk('gridfs')->put($path, $content);
-
-        if (!$stored) {
-            throw new \Exception('Failed to upload file to GridFS');
-        }
+        \Illuminate\Support\Facades\Storage::disk('gridfs')->write($path, $content, new Config());
 
         return self::create([
             'filename' => $originalFilename,

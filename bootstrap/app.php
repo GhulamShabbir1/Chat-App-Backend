@@ -16,7 +16,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'workspace.access' => \App\Http\Middleware\CheckWorkspaceAccess::class,
             'team.access' => \App\Http\Middleware\CheckTeamAccess::class,
             'channel.access' => \App\Http\Middleware\CheckChannelAccess::class,
-            'custom.auth' => \App\Http\Middleware\CustomAuthMiddleware::class,
+            'custom.auth' => \App\Http\Middleware\Auth\CustomAuthMiddleware::class,
             'validate.workspace.store' => \App\Http\Middleware\ValidateWorkspaceStore::class,
             'validate.team.store' => \App\Http\Middleware\ValidateTeamStore::class,
             'validate.channel.store' => \App\Http\Middleware\ValidateChannelStore::class,

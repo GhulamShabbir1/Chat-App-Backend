@@ -3,6 +3,8 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\Storage;
+use League\Flysystem\GridFS\GridFSAdapter;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -19,7 +21,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // Configure Sanctum to use MongoDB token model
-        \Laravel\Sanctum\Sanctum::usePersonalAccessTokenModel(\App\Models\MongoPersonalAccessToken::class);
+        // Register GridFS adapter for Flysystem
+        Storage::extend('gridfs', function ($app, $config) {
+            $database = $app['db']->connection('mongodb')->getMongoDB();
+            $bucket = $database->selectGridFSBucket(['bucketName' => $config['bucket'] ?? 'fs']);
+            return new \League\Flysystem\GridFS\GridFSAdapter($bucket);
+        });
     }
 }

@@ -4,12 +4,16 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\RegisterRequest;
+use App\Http\Requests\Auth\SendOtpRequest;
 use App\Http\Requests\Auth\UpdateProfileRequest;
+use App\Http\Requests\Auth\VerifyOtpRequest;
 use App\Http\Resources\UserResource;
+use App\Jobs\SendWelcomeEmail;
 use App\Mail\PasswordResetMail;
 use App\Models\CustomAccessToken;
 use App\Models\PasswordResetToken;
 use App\Models\User;
+use App\Notifications\WelcomeNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
@@ -18,16 +22,79 @@ use Illuminate\Support\Str;
 
 class AuthController extends Controller
 {
-    public function register(RegisterRequest $request)
+    public function sendOtp(SendOtpRequest $request)
     {
+        $email = $request->email;
+
+        // Check if user already exists
+        if (User::where('email', $email)->exists()) {
+            return response()->json(['error' => 'User already exists'], 409);
+        }
+
+        // Generate 6-digit OTP
+        $otp = str_pad(mt_rand(0, 999999), 6, '0', STR_PAD_LEFT);
+
+        // Store OTP in database with expiration (5 minutes)
+        OtpToken::updateOrCreate(
+            ['email' => $email],
+            [
+                'otp' => $otp,
+                'expires_at' => now()->addMinutes(5),
+            ]
+        );
+
+        // Send OTP email
+        try {
+            Mail::to($email)->send(new OtpMail($otp, $email));
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Failed to send OTP email',
+                'details' => $e->getMessage()
+            ], 500);
+        }
+
+        return response()->json(['message' => 'OTP sent to your email']);
+    }
+
+    public function verifyOtp(VerifyOtpRequest $request)
+    {
+        $email = $request->email;
+        $otp = $request->otp;
+
+        // Find OTP record
+        $otpRecord = OtpToken::where('email', $email)->first();
+
+        if (!$otpRecord) {
+            return response()->json(['error' => 'OTP not found'], 400);
+        }
+
+        // Check if OTP matches
+        if ($otpRecord->otp !== $otp) {
+            return response()->json(['error' => 'Invalid OTP'], 400);
+        }
+
+        // Check if OTP is expired
+        if ($otpRecord->expires_at->isPast()) {
+            $otpRecord->delete();
+            return response()->json(['error' => 'OTP expired'], 400);
+        }
+
+        // Create user
         $user = User::create([
             'name' => $request->name,
-            'email' => $request->email,
+            'email' => $email,
             'password' => Hash::make($request->password),
             'status' => 'active',
         ]);
 
-        \Illuminate\Support\Facades\Mail::to($user->email)->send(new \App\Mail\WelcomeEmail($user));
+        // Delete OTP record
+        $otpRecord->delete();
+
+        // Dispatch welcome email job
+        // SendWelcomeEmail::dispatch($user);
+
+        // Send welcome notification
+        // $user->notify(new WelcomeNotification());
 
         $token = $user->createCustomToken();
 

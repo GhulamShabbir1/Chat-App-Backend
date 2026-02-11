@@ -6,11 +6,12 @@ use Illuminate\Auth\Authenticatable;
 use Illuminate\Contracts\Auth\Authenticatable as AuthenticatableContract;
 use Illuminate\Contracts\Auth\Access\Authorizable as AuthorizableContract;
 use Illuminate\Foundation\Auth\Access\Authorizable;
+use Illuminate\Notifications\Notifiable;
 use MongoDB\Laravel\Eloquent\Model;
 
 class User extends Model implements AuthenticatableContract, AuthorizableContract
 {
-    use Authenticatable, Authorizable, \Illuminate\Auth\Passwords\CanResetPassword;
+    use Authenticatable, Authorizable, Notifiable, \Illuminate\Auth\Passwords\CanResetPassword;
 
     protected $connection = 'mongodb';
     protected $collection = 'users';
